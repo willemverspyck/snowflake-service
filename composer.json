@@ -1,0 +1,46 @@
+{
+    "name": "willemverspyck/snowflake-service",
+    "description": "Snowflake API connector",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Willem Verspyck",
+            "email": "willemverspyck@outlook.com",
+            "homepage": "https://verspyck.com",
+            "role": "Developer"
+        }
+    ],
+    "keywords": [
+        "snowflake",
+        "database",
+        "service",
+        "php",
+        "api",
+        "data"
+    ],
+    "homepage": "https://github.com/willemverspyck/snowflake-service",
+    "type": "library",
+    "require": {
+        "php": "^7.4|^8.0",
+        "web-token/jwt-core": "^2",
+        "web-token/jwt-key-mgmt": "^2",
+        "web-token/jwt-signature": "^2",
+        "web-token/jwt-signature-algorithm-rsa": "^2",
+        "symfony/http-client": "^4.4|^5",
+        "symfony/serializer": "^4.4|^5"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9",
+        "squizlabs/php_codesniffer": "^3"
+    },
+    "autoload": {
+        "psr-4": {
+            "WillemVerspyck\\SnowflakeService\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "WillemVerspyck\\SnowflakeService\\Tests\\": "tests/"
+        }
+    }
+}
