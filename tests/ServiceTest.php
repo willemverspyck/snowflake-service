@@ -3,7 +3,9 @@
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use WillemVerspyck\SnowflakeService\Client;
+use WillemVerspyck\SnowflakeService\Exception\ResultException;
 use WillemVerspyck\SnowflakeService\Service;
 use WillemVerspyck\SnowflakeService\Exception\ParameterException;
 
@@ -48,33 +50,15 @@ class ServiceTest extends TestCase
     }
 
     /**
-     * Test getWarehouseException
-     */
-    public function testGetWarehouseException(): void
-    {
-        self::expectException(ParameterException::class);
-
-        $this->service->getWarehouse();
-    }
-
-    /**
      * Test getWarehouse
      */
     public function testGetWarehouse(): void
     {
+        self::assertNull($this->service->getWarehouse());
+
         $this->service->setWarehouse('ACCOUNT');
 
         self::assertEquals('ACCOUNT', $this->service->getWarehouse());
-    }
-
-    /**
-     * Test getDatabaseException
-     */
-    public function testGetDatabaseException(): void
-    {
-        self::expectException(ParameterException::class);
-
-        $this->service->getDatabase();
     }
 
     /**
@@ -82,19 +66,11 @@ class ServiceTest extends TestCase
      */
     public function testGetDatabase(): void
     {
+        self::assertNull($this->service->getDatabase());
+
         $this->service->setDatabase('DATABASE');
 
         self::assertEquals('DATABASE', $this->service->getDatabase());
-    }
-
-    /**
-     * Test getSchemaException
-     */
-    public function testGetSchemaException(): void
-    {
-        self::expectException(ParameterException::class);
-
-        $this->service->getSchema();
     }
 
     /**
@@ -102,19 +78,11 @@ class ServiceTest extends TestCase
      */
     public function testGetSchema(): void
     {
+        self::assertNull($this->service->getSchema());
+
         $this->service->setSchema('SCHEMA');
 
         self::assertEquals('SCHEMA', $this->service->getSchema());
-    }
-
-    /**
-     * Test getRoleException
-     */
-    public function testGetRoleException(): void
-    {
-        self::expectException(ParameterException::class);
-
-        $this->service->getRole();
     }
 
     /**
@@ -122,6 +90,8 @@ class ServiceTest extends TestCase
      */
     public function testGetRole(): void
     {
+        self::assertNull($this->service->getRole());
+
         $this->service->setRole('ROLE');
 
         self::assertEquals('ROLE', $this->service->getRole());
@@ -149,5 +119,62 @@ class ServiceTest extends TestCase
         $this->service->setNullable(false);
 
         self::assertFalse($this->service->isNullable());
+    }
+
+    /**
+     * Test hasResultUnacceptable
+     */
+    public function testHasResultUnacceptable(): void
+    {
+        $reflection = new ReflectionClass($this->service);
+
+        $method = $reflection->getMethod('hasResult');
+        $method->setAccessible(true);
+
+        $this->expectException(ResultException::class);
+        $this->expectExceptionMessage('Unacceptable result');
+        $this->expectExceptionCode(406);
+
+        $method->invokeArgs($this->service, [[]]);
+    }
+
+    /**
+     * Test hasResultNotSuccessOrAsync
+     */
+    public function testHasResultNotSuccessOrAsync(): void
+    {
+        $reflection = new ReflectionClass($this->service);
+
+        $method = $reflection->getMethod('hasResult');
+        $method->setAccessible(true);
+
+        $this->expectException(ResultException::class);
+        $this->expectExceptionMessage('Exception Message (000000)');
+        $this->expectExceptionCode(422);
+
+        $method->invokeArgs($this->service, [[
+            'code' => '000000',
+            'message' => 'Exception Message',
+        ]]);
+    }
+
+    /**
+     * Test hasResultUnprocessable
+     */
+    public function testHasResultUnprocessable(): void
+    {
+        $reflection = new ReflectionClass($this->service);
+
+        $method = $reflection->getMethod('hasResult');
+        $method->setAccessible(true);
+
+        $this->expectException(ResultException::class);
+        $this->expectExceptionMessage('Unprocessable result');
+        $this->expectExceptionCode(422);
+
+        $method->invokeArgs($this->service, [[
+            'code' => '090001',
+            'message' => 'Complete',
+        ]]);
     }
 }

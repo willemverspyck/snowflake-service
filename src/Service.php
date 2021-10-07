@@ -98,16 +98,10 @@ class Service
     }
 
     /**
-     * @return string
-     *
-     * @throws ParameterException
+     * @return string|null
      */
-    public function getWarehouse(): string
+    public function getWarehouse(): ?string
     {
-        if (null === $this->warehouse) {
-            throw new ParameterException('Warehouse not set');
-        }
-
         return $this->warehouse;
     }
 
@@ -124,16 +118,10 @@ class Service
     }
 
     /**
-     * @return string
-     *
-     * @throws ParameterException
+     * @return string|null
      */
-    public function getDatabase(): string
+    public function getDatabase(): ?string
     {
-        if (null === $this->database) {
-            throw new ParameterException('Database not set');
-        }
-
         return $this->database;
     }
 
@@ -150,16 +138,10 @@ class Service
     }
 
     /**
-     * @return string
-     *
-     * @throws ParameterException
+     * @return string|null
      */
-    public function getSchema(): string
+    public function getSchema(): ?string
     {
-        if (null === $this->schema) {
-            throw new ParameterException('Schema not set');
-        }
-
         return $this->schema;
     }
 
@@ -176,16 +158,10 @@ class Service
     }
 
     /**
-     * @return string
-     *
-     * @throws ParameterException
+     * @return string|null
      */
-    public function getRole(): string
+    public function getRole(): ?string
     {
-        if (null === $this->role) {
-            throw new ParameterException('Role not set');
-        }
-
         return $this->role;
     }
 
@@ -311,7 +287,7 @@ class Service
             'json' => $data,
         ]);
 
-        return $this->translateResult($response->toArray(true));
+        return $this->translateResult($response->toArray(false));
     }
 
     /**
@@ -344,7 +320,7 @@ class Service
             'headers' => $this->getHeaders(),
         ]);
 
-        return $this->translateResult($response->toArray(true));
+        return $this->translateResult($response->toArray(false));
     }
 
     /**
@@ -368,7 +344,7 @@ class Service
             'headers' => $this->getHeaders(),
         ]);
 
-        $this->hasResult($response->toArray(true));
+        $this->hasResult($response->toArray(false));
     }
 
     /**
@@ -378,14 +354,18 @@ class Service
      */
     private function hasResult(array $data): void
     {
-        foreach (['code', 'message', 'statementHandle'] as $field) {
+        foreach (['code', 'message'] as $field) {
             if (false === array_key_exists($field, $data)) {
-                throw new ResultException('No response');
+                throw new ResultException('Unacceptable result', 406);
             }
         }
 
         if (false === in_array($data['code'], [self::CODE_SUCCESS, self::CODE_ASYNC])) {
-            throw new ResultException(sprintf('%s (%s)', $data['message'], $data['code']));
+            throw new ResultException(sprintf('%s (%s)', $data['message'], $data['code']), 422);
+        }
+
+        if (false === array_key_exists('statementHandle', $data)) {
+            throw new ResultException('Unprocessable result', 422);
         }
     }
 
@@ -435,7 +415,7 @@ class Service
     {
         return [
             sprintf('Authorization: Bearer %s', $this->getClient()->getToken()),
-            'User-Agent: SnowflakeApi Connector',
+            'User-Agent: SnowflakeService',
             'X-Snowflake-Authorization-Token-Type: KEYPAIR_JWT',
         ];
     }
