@@ -262,14 +262,16 @@ class Service
     {
         $client = $this->getClient();
 
-        $parameters = [
+        $account = $client->getAccount();
+        
+        $parameters = http_build_query([
             'page' => 0,
             'pageSize' => $this->getSize(),
             'async' => $this->isAsync() ? 'true' : 'false',
             'nullable' => $this->isNullable() ? 'true' : 'false',
-        ];
+        ]);
 
-        $url = sprintf('https://%s.snowflakecomputing.com/api/statements?%s', $client->getAccount(), http_build_query($parameters));
+        $url = sprintf('https://%s.snowflakecomputing.com/api/statements?%s', $account, $parameters);
 
         $data = [
             'statement' => $statement,
@@ -308,13 +310,15 @@ class Service
     public function getStatement(string $id, int $page = 1): Result
     {
         $client = $this->getClient();
+        
+        $account = $client->getAccount()
 
-        $parameters = [
+        $parameters = http_build_query([
             'page' => $page - 1,
             'pageSize' => $this->getSize(),
-        ];
+        ]);
 
-        $url = sprintf('https://%s.snowflakecomputing.com/api/statements/%s?%s', $client->getAccount(), $id, http_build_query($parameters));
+        $url = sprintf('https://%s.snowflakecomputing.com/api/statements/%s?%s', $account, $id, $parameters);
 
         $response = $client->getHttpClient()->request('GET', $url, [
             'headers' => $this->getHeaders(),

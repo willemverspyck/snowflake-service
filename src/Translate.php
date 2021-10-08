@@ -16,7 +16,7 @@ use WillemVerspyck\SnowflakeService\Exception\TranslateException;
 class Translate
 {
     /**
-     * @var array 
+     * @var array
      */
     private array $fields = [];
 
@@ -34,14 +34,16 @@ class Translate
     
     /**
      * @param array $fields
-     * 
+     *
      * @throws TranslateException
      */
     public function setFields(array $fields): void
     {
         foreach ($fields as $field) {
-            if (false === array_key_exists('name', $field) || false === array_key_exists('type', $field) || false === array_key_exists('scale', $field)) {
-                throw new TranslateException('Fields not found');
+            foreach (['name', 'type', 'scale'] as $name) {
+                if (false === array_key_exists($name, $field)) {
+                    throw new TranslateException('Fields not found');
+                }
             }
         }
 
@@ -158,7 +160,7 @@ class Translate
      * @param string|null $value
      *
      * @return DateTimeInterface|null
-     * 
+     *
      * @throws Exception
      */
     private function getTime(?string $value): ?DateTimeInterface
@@ -183,7 +185,7 @@ class Translate
      * @param string|null $value
      *
      * @return DateTimeInterface|null
-     * 
+     *
      * @throws Exception
      */
     private function getTimeWithTimezone(?string $value): ?DateTimeInterface
