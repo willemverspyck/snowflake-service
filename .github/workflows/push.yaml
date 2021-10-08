@@ -20,4 +20,3 @@ jobs:
         run: ./vendor/bin/phpcs src -v --standard=PSR2
       - name: Unit Tests
         run: ./vendor/bin/phpunit --coverage-text --colors
-w
