@@ -178,7 +178,7 @@ class ResultTest extends TestCase
         $this->result->setTimestamp(1633082116654);
 
         self::assertInstanceOf(DateTimeInterface::class, $this->result->getTimestamp());
-        self::assertEquals(new DateTime('2021-10-01T11:55:16'), $this->result->getTimestamp());
+        self::assertEquals(new DateTime('2021-10-01T09:55:16.0000000+00:00'), $this->result->getTimestamp());
     }
 
     /**
