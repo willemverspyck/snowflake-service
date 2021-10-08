@@ -311,7 +311,7 @@ class Service
     {
         $client = $this->getClient();
         
-        $account = $client->getAccount()
+        $account = $client->getAccount();
 
         $parameters = http_build_query([
             'page' => $page - 1,
