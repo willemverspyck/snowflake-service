@@ -173,6 +173,25 @@ final class Result
      */
     public function getData(): ?array
     {
+        $fields = $this->getFields();
+
+        if (null === $this->data || null === $fields) {
+            return null;
+        }
+
+        $translate = new Translate();
+        $translate->setFields($fields);
+
+        return array_map([$translate, 'getData'], $this->data);
+    }
+
+    /**
+     * Get dataRaw
+     *
+     * @return array|null
+     */
+    public function getDataRaw(): ?array
+    {
         return $this->data;
     }
 

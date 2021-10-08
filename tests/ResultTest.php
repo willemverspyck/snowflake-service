@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
 use DateTime;
@@ -98,6 +100,51 @@ class ResultTest extends TestCase
     {
         self::assertNull($this->result->getData());
 
+        $this->result->setFields([
+            [
+                'name' => 'FIELD1',
+                'type' => 'text',
+                'scale' => null,
+            ],
+            [
+                'name' => 'FIELD2',
+                'type' => 'boolean',
+                'scale' => null,
+            ],
+        ]);
+
+        $this->result->setData([
+            [
+                '0',
+                'value1',
+                '1',
+            ],
+            [
+                '1',
+                'value2',
+                '0',
+            ],
+        ]);
+
+        self::assertEquals([
+            [
+                'FIELD1' => 'value1',
+                'FIELD2' => true,
+            ],
+            [
+                'FIELD1' => 'value2',
+                'FIELD2' => false,
+            ],
+        ], $this->result->getData());
+    }
+
+    /**
+     * Test getDataRaw
+     */
+    public function testGetDataRaw(): void
+    {
+        self::assertNull($this->result->getDataRaw());
+
         $this->result->setData([
             [
                 'field1',
@@ -118,7 +165,7 @@ class ResultTest extends TestCase
                 'field1',
                 'field2',
             ],
-        ], $this->result->getData());
+        ], $this->result->getDataRaw());
     }
 
     /**

@@ -40,24 +40,35 @@ DESC USER <username>;
 <?php
  
 $client = new Client();
-$client->setAccount('<account>'); // Account can be found in the URL: https://[account].snowflakecomputing.com/
-$client->setUser('<username>'); // Username
-$client->setPublicKey('<publicKey>'); // Public key from step 3
-$client->setPrivateKey('rsa_key.pem'); // Private key from step 1. Must be the path of the file.
-$client->setToken(); // This command will generate the JWT token. First parameter is the number of seconds the token will expire.
+# Account can be found in the URL: https://[account].snowflakecomputing.com/
+$client->setAccount('<account>');
+# Username
+$client->setUser('<username>');
+# Public key from step 3
+$client->setPublicKey('<publicKey>');
+# Private key from step 1. Must be the path of the file.
+$client->setPrivateKey('rsa_key.pem');
+# This command will generate the JWT token. First parameter is the number of seconds the token will expire.
+$client->setToken();
 
 $service = $client->getService();
-$service->setWarehouse('<warehouse>'); // Warehouse you want to use
-$service->setDatabase('<database>'); // Database you want to use
-$service->setSchema('<schema>'); // Schema you want to use
-$service->setRole('<role>'); // Role you want to use for this statement
+# Warehouse you want to use. Not required when default Warehouse is set in Snowflake for this user.
+$service->setWarehouse('<warehouse>');
+# Database you want to use. Not required when default Database is set in Snowflake for this user. 
+$service->setDatabase('<database>');
+# Schema you want to use. Not required when default Schema is set in Snowflake for this user.
+$service->setSchema('<schema>');
+# Role you want to use. Not required when default Role is set in Snowflake for this user.
+$service->setRole('<role>');
 ```
 
 Optional configuration:
 
 ```php
-$service->setAsync(false); // Set too true to execute the statement asynchronously and return the statement handle. Default false
-$service->setNullable(false); // Set too false to return a SQL NULL value as the string "null", rather than as the value null. Default: true
+# Set too true to execute the statement asynchronously and return the statement handle. Default false
+$service->setAsync(false); 
+# Set too false to return a SQL NULL value as the string "null", rather than as the value null. Default: true
+$service->setNullable(false);
 ```
 
 To execute the statement:
@@ -69,14 +80,31 @@ $result = $service->postStatement($statement);
 The statement is executed and the results are returned as ```Result``` object. If asynchronously is not specified or is set to false (and if the execution is completed in 45 seconds), then you will get a ```Result``` object with ```isExecuted()``` is set to true. Properties from the ```Result``` object:
 
 ```php
-$result->getId(); // The "Query ID" from Snowflake 
-$result->getTotal(); // Total number of results
-$result->getPage(); // Current page
-$result->getPageTotal(); // Total number of pages
-$result->getFields(); // Get fields
-$result->getData(); // Get data
-$result->getTimestamp(); // Get ```DateTime``` object when statement is executed
-$result->isExecuted(); // Check if the statement is executed
+# The "Query ID" from Snowflake.
+$result->getId();
+# Total number of results (NULL when `isExecuted` is false).
+$result->getTotal();
+# Current page (NULL when `isExecuted` is false).
+$result->getPage();
+# Total number of pages (NULL when `isExecuted` is false).
+$result->getPageTotal();
+# Get fields (NULL when `isExecuted` is false).
+$result->getFields();
+# Get the raw data (NULL when `isExecuted` is false).
+$result->getDataRaw();
+# Get the data converted to PHP variables (NULL when `isExecuted` is false).
+#
+# The fields are converted and type juggling because:
+# Boolean is returned as string, "0" will be false and "1" will be true.
+# Number is returned as string, will be converted to float or int
+# Date is returned as integer (in a string) of the number of days since the Epoch. For example: 18262. Will be converted to DateTime object.
+# Time is returned as float (in a string with 9 decimal places) of the number of seconds since the Epoch. For example: 82919.000000000. Will be converted to DateTime object.
+# Time with Timezone is returned as float (in a string with 9 decimal places) of the number of seconds since the Epoch, followed by a space and the time zone offset in minutes. For example: 1616173619000000000 960. Will be converted to DateTime object.
+$result->getData();
+# Get `DateTime` object when statement is executed.
+$result->getTimestamp();
+# Check if the statement is executed.
+$result->isExecuted();
 ```
 
 If asynchronously is set to true or the statement execution takes longer than 45 seconds to complete, then ```Result``` object is returned with ```isExecuted()``` set to false. All fields are NULL, except ```getId()```.
