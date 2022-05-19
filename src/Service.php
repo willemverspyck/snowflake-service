@@ -271,7 +271,7 @@ class Service
             'nullable' => $this->isNullable() ? 'true' : 'false',
         ]);
 
-        $url = sprintf('https://%s.snowflakecomputing.com/api/statements?%s', $account, $parameters);
+        $url = sprintf('https://%s.snowflakecomputing.com/api/v2/statements?%s', $account, $parameters);
 
         $data = [
             'statement' => $statement,
@@ -318,7 +318,7 @@ class Service
             'pageSize' => $this->getSize(),
         ]);
 
-        $url = sprintf('https://%s.snowflakecomputing.com/api/statements/%s?%s', $account, $id, $parameters);
+        $url = sprintf('https://%s.snowflakecomputing.com/api/v2/statements/%s?%s', $account, $id, $parameters);
 
         $response = $client->getHttpClient()->request('GET', $url, [
             'headers' => $this->getHeaders(),
@@ -342,7 +342,7 @@ class Service
     {
         $client = $this->getClient();
 
-        $url = sprintf('https://%s.snowflakecomputing.com/api/statements/%s/cancel', $client->getAccount(), $id);
+        $url = sprintf('https://%s.snowflakecomputing.com/api/v2/statements/%s/cancel', $client->getAccount(), $id);
 
         $response = $client->getHttpClient()->request('POST', $url, [
             'headers' => $this->getHeaders(),
