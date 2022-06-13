@@ -11,19 +11,13 @@ use WillemVerspyck\SnowflakeService\Exception\ResultException;
 use WillemVerspyck\SnowflakeService\Service;
 use WillemVerspyck\SnowflakeService\Exception\ParameterException;
 
-/**
- * Class ServiceTest
- */
-class ServiceTest extends TestCase
+final class ServiceTest extends TestCase
 {
     /**
      * @var Service
      */
     private Service $service;
 
-    /**
-     *
-     */
     public function setUp(): void
     {
         $client = $this->createMock(Client::class);
@@ -31,29 +25,6 @@ class ServiceTest extends TestCase
         $this->service = new Service($client);
     }
 
-    /**
-     * Test getSizeException
-     */
-    public function testGetSizeException(): void
-    {
-        self::expectException(ParameterException::class);
-
-        $this->service->setSize(10000000);
-    }
-
-    /**
-     * Test getUser
-     */
-    public function testGetSize(): void
-    {
-        $this->service->setSize(1000);
-
-        self::assertEquals(1000, $this->service->getSize());
-    }
-
-    /**
-     * Test getWarehouse
-     */
     public function testGetWarehouse(): void
     {
         self::assertNull($this->service->getWarehouse());
@@ -63,9 +34,6 @@ class ServiceTest extends TestCase
         self::assertEquals('ACCOUNT', $this->service->getWarehouse());
     }
 
-    /**
-     * Test getDatabase
-     */
     public function testGetDatabase(): void
     {
         self::assertNull($this->service->getDatabase());
@@ -75,9 +43,6 @@ class ServiceTest extends TestCase
         self::assertEquals('DATABASE', $this->service->getDatabase());
     }
 
-    /**
-     * Test getSchema
-     */
     public function testGetSchema(): void
     {
         self::assertNull($this->service->getSchema());
@@ -87,9 +52,6 @@ class ServiceTest extends TestCase
         self::assertEquals('SCHEMA', $this->service->getSchema());
     }
 
-    /**
-     * Test getSchema
-     */
     public function testGetRole(): void
     {
         self::assertNull($this->service->getRole());
@@ -99,9 +61,6 @@ class ServiceTest extends TestCase
         self::assertEquals('ROLE', $this->service->getRole());
     }
 
-    /**
-     * Test isAsync
-     */
     public function testIsAsync(): void
     {
         self::assertFalse($this->service->isAsync());
@@ -111,9 +70,6 @@ class ServiceTest extends TestCase
         self::assertTrue($this->service->isAsync());
     }
 
-    /**
-     * Test isNullable
-     */
     public function testIsNullable(): void
     {
         self::assertTrue($this->service->isNullable());
@@ -123,15 +79,11 @@ class ServiceTest extends TestCase
         self::assertFalse($this->service->isNullable());
     }
 
-    /**
-     * Test hasResultUnacceptable
-     */
     public function testHasResultUnacceptable(): void
     {
         $reflection = new ReflectionClass($this->service);
 
         $method = $reflection->getMethod('hasResult');
-        $method->setAccessible(true);
 
         $this->expectException(ResultException::class);
         $this->expectExceptionMessage('Unacceptable result');
@@ -140,15 +92,11 @@ class ServiceTest extends TestCase
         $method->invokeArgs($this->service, [[]]);
     }
 
-    /**
-     * Test hasResultNotSuccessOrAsync
-     */
     public function testHasResultNotSuccessOrAsync(): void
     {
         $reflection = new ReflectionClass($this->service);
 
         $method = $reflection->getMethod('hasResult');
-        $method->setAccessible(true);
 
         $this->expectException(ResultException::class);
         $this->expectExceptionMessage('Exception Message (000000)');
@@ -160,15 +108,11 @@ class ServiceTest extends TestCase
         ]]);
     }
 
-    /**
-     * Test hasResultUnprocessable
-     */
     public function testHasResultUnprocessable(): void
     {
         $reflection = new ReflectionClass($this->service);
 
         $method = $reflection->getMethod('hasResult');
-        $method->setAccessible(true);
 
         $this->expectException(ResultException::class);
         $this->expectExceptionMessage('Unprocessable result');

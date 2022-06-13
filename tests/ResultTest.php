@@ -9,19 +9,13 @@ use DateTimeInterface;
 use PHPUnit\Framework\TestCase;
 use WillemVerspyck\SnowflakeService\Result;
 
-/**
- * Class ResultTest
- */
-class ResultTest extends TestCase
+final class ResultTest extends TestCase
 {
     /**
      * @var Result
      */
     private Result $result;
 
-    /**
-     *
-     */
     public function setUp(): void
     {
         $this->result = new Result();
@@ -29,17 +23,11 @@ class ResultTest extends TestCase
         $this->result->setExecuted(false);
     }
 
-    /**
-     * Test getId
-     */
     public function testGetId(): void
     {
         self::assertEquals('ID', $this->result->getId());
     }
 
-    /**
-     * Test getTotal
-     */
     public function testGetTotal(): void
     {
         self::assertNull($this->result->getTotal());
@@ -49,9 +37,6 @@ class ResultTest extends TestCase
         self::assertEquals(10, $this->result->getTotal());
     }
 
-    /**
-     * Test getPage
-     */
     public function testGetPage(): void
     {
         self::assertNull($this->result->getPage());
@@ -61,9 +46,6 @@ class ResultTest extends TestCase
         self::assertEquals(1, $this->result->getPage());
     }
 
-    /**
-     * Test getPageTotal
-     */
     public function testGetPageTotal(): void
     {
         self::assertNull($this->result->getPageTotal());
@@ -73,9 +55,6 @@ class ResultTest extends TestCase
         self::assertEquals(20, $this->result->getPageTotal());
     }
 
-    /**
-     * Test getFields
-     */
     public function testGetFields(): void
     {
         self::assertNull($this->result->getFields());
@@ -93,9 +72,6 @@ class ResultTest extends TestCase
         ], $this->result->getFields());
     }
 
-    /**
-     * Test getData
-     */
     public function testGetData(): void
     {
         self::assertNull($this->result->getData());
@@ -115,12 +91,10 @@ class ResultTest extends TestCase
 
         $this->result->setData([
             [
-                '0',
                 'value1',
                 '1',
             ],
             [
-                '1',
                 'value2',
                 '0',
             ],
@@ -138,9 +112,6 @@ class ResultTest extends TestCase
         ], $this->result->getData());
     }
 
-    /**
-     * Test getDataRaw
-     */
     public function testGetDataRaw(): void
     {
         self::assertNull($this->result->getDataRaw());
@@ -168,9 +139,6 @@ class ResultTest extends TestCase
         ], $this->result->getDataRaw());
     }
 
-    /**
-     * Test getTimestamp
-     */
     public function testGetTimestamp(): void
     {
         self::assertNull($this->result->getTimestamp());
@@ -181,9 +149,6 @@ class ResultTest extends TestCase
         self::assertEquals(new DateTime('2021-10-01T09:55:16.0000000+00:00'), $this->result->getTimestamp());
     }
 
-    /**
-     * Test isExecuted
-     */
     public function testIsExecuted(): void
     {
         self::assertFalse($this->result->isExecuted());

@@ -3,7 +3,7 @@
 Snowflake API connector in PHP
 
 ## Requirements
-PHP ^7.4|^8.0
+PHP ^8.0
 
 ## Installation
 Install it using [Composer](https://getcomposer.org/):
@@ -117,7 +117,7 @@ $result = $service->getStatement($results->getId());
 
 For example: Try every 10 minutes until the statement is executed and the ```isExecuted``` will be true.
 
-To get more results:
+The ```$service->getStatement()``` will return an array when ```$page``` is higher than 1. If ```$page``` is 1, it will return the ```Result``` object:
 
 ```php
 $page = 2;

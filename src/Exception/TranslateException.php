@@ -6,9 +6,6 @@ namespace WillemVerspyck\SnowflakeService\Exception;
 
 use Exception;
 
-/**
- * Class TranslateException
- */
-class TranslateException extends Exception
+final class TranslateException extends Exception
 {
 }

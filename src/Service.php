@@ -4,28 +4,20 @@ declare(strict_types=1);
 
 namespace WillemVerspyck\SnowflakeService;
 
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Exception\ExceptionInterface;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\HttpClient\Exception\JsonException;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
 use WillemVerspyck\SnowflakeService\Exception\ParameterException;
 use WillemVerspyck\SnowflakeService\Exception\ResultException;
-use WillemVerspyck\SnowflakeService\Serializer\FieldNameConverter;
 
-/**
- * Class Service
- */
 class Service
 {
     private const CODE_SUCCESS = '090001';
     private const CODE_ASYNC = '333334';
-    private const SIZE_MIN = 10;
-    private const SIZE_MAX = 10000;
 
     /**
      * @var Client
@@ -51,11 +43,6 @@ class Service
      * @var string|null
      */
     private ?string $role = null;
-
-    /**
-     * @var int
-     */
-    private int $size = self::SIZE_MAX;
 
     /**
      * @var bool
@@ -178,32 +165,6 @@ class Service
     }
 
     /**
-     * @return int
-     */
-    public function getSize(): int
-    {
-        return $this->size;
-    }
-
-    /**
-     * @param int $size
-     *
-     * @return $this
-     *
-     * @throws ParameterException
-     */
-    public function setSize(int $size): self
-    {
-        if ($size < self::SIZE_MIN || $size > self::SIZE_MAX) {
-            throw new ParameterException(sprintf('Size must be between %d and %d', self::SIZE_MIN, self::SIZE_MAX));
-        }
-
-        $this->size = $size;
-
-        return $this;
-    }
-
-    /**
      * @return bool
      */
     public function isAsync(): bool
@@ -245,33 +206,30 @@ class Service
 
     /**
      * @param string $statement
-     * @param array  $data
+     * @param array  $parameters
      *
      * @return Result
      *
      * @throws ClientExceptionInterface
      * @throws DecodingExceptionInterface
-     * @throws ExceptionInterface
      * @throws ParameterException
      * @throws RedirectionExceptionInterface
      * @throws ResultException
      * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface
      */
-    public function postStatement(string $statement, array $data = []): Result
+    public function postStatement(string $statement, array $parameters = []): Result
     {
         $client = $this->getClient();
 
         $account = $client->getAccount();
         
-        $parameters = http_build_query([
-            'page' => 0,
-            'pageSize' => $this->getSize(),
+        $variables = http_build_query([
             'async' => $this->isAsync() ? 'true' : 'false',
             'nullable' => $this->isNullable() ? 'true' : 'false',
         ]);
 
-        $url = sprintf('https://%s.snowflakecomputing.com/api/statements?%s', $account, $parameters);
+        $url = sprintf('https://%s.snowflakecomputing.com/api/v2/statements?%s', $account, $variables);
 
         $data = [
             'statement' => $statement,
@@ -280,51 +238,62 @@ class Service
             'schema' => $this->getSchema(),
             'role' => $this->getRole(),
             'resultSetMetaData' => [
-                'format' => 'json',
+                'format' => 'jsonv2',
             ],
-        ] + $data;
+        ];
 
         $response = $client->getHttpClient()->request('POST', $url, [
             'headers' => $this->getHeaders(),
             'json' => $data,
         ]);
 
-        return $this->translateResult($response->toArray(false));
+        $content = $this->toArray($response);
+
+        $this->hasResult($content);
+
+        return $this->translateResult($content, $content['code'] === self::CODE_SUCCESS);
     }
 
     /**
      * @param string $id
      * @param int    $page
      *
-     * @return Result
+     * @return array|Result
      *
      * @throws ClientExceptionInterface
      * @throws DecodingExceptionInterface
-     * @throws ExceptionInterface
      * @throws ParameterException
      * @throws RedirectionExceptionInterface
      * @throws ResultException
      * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface
      */
-    public function getStatement(string $id, int $page = 1): Result
+    public function getStatement(string $id, int $page = 1): array|Result
     {
         $client = $this->getClient();
         
         $account = $client->getAccount();
 
-        $parameters = http_build_query([
-            'page' => $page - 1,
-            'pageSize' => $this->getSize(),
+        $variables = http_build_query([
+            'partition' => $page - 1,
         ]);
 
-        $url = sprintf('https://%s.snowflakecomputing.com/api/statements/%s?%s', $account, $id, $parameters);
+        $url = sprintf('https://%s.snowflakecomputing.com/api/v2/statements/%s?%s', $account, $id, $variables);
 
         $response = $client->getHttpClient()->request('GET', $url, [
             'headers' => $this->getHeaders(),
         ]);
 
-        return $this->translateResult($response->toArray(false));
+        // Remove custom toArray when bug in PHP is fixed with support for multiple GZIP's (CRC-32 check and length)
+        // $content = $response->toArray(true);
+
+        $content = $this->toArray($response);
+
+        if ($page > 1) {
+            return $this->translateData($content);
+        }
+
+        return $this->translateResult($content, true);
     }
 
     /**
@@ -342,7 +311,7 @@ class Service
     {
         $client = $this->getClient();
 
-        $url = sprintf('https://%s.snowflakecomputing.com/api/statements/%s/cancel', $client->getAccount(), $id);
+        $url = sprintf('https://%s.snowflakecomputing.com/api/v2/statements/%s/cancel', $client->getAccount(), $id);
 
         $response = $client->getHttpClient()->request('POST', $url, [
             'headers' => $this->getHeaders(),
@@ -368,59 +337,140 @@ class Service
             throw new ResultException(sprintf('%s (%s)', $data['message'], $data['code']), 422);
         }
 
-        if (false === array_key_exists('statementHandle', $data)) {
-            throw new ResultException('Unprocessable result', 422);
+        foreach (['statementHandle', 'statementStatusUrl'] as $field) {
+            if (false === array_key_exists($field, $data)) {
+                throw new ResultException('Unprocessable result', 422);
+            }
         }
     }
 
     /**
      * @param array $data
+     * @param bool  $executed
      *
      * @return Result
      *
-     * @throws ExceptionInterface
      * @throws ResultException
      */
-    private function translateResult(array $data): Result
+    private function translateResult(array $data, bool $executed = false): Result
     {
-        $this->hasResult($data);
+        $result = new Result();
+        $result->setId($data['statementHandle']);
+        $result->setExecuted($executed);
 
-        $data['executed'] = $data['code'] === self::CODE_SUCCESS;
-
-        if (array_key_exists('resultSetMetaData', $data)) { // TODO: Resolve this in ObjectNormalizer
-            if (array_key_exists('page', $data['resultSetMetaData'])) {
-                $data['resultSetMetaData']['page'] += 1;
-            }
-
-            $data = array_merge($data, $data['resultSetMetaData']);
+        if (false === $executed) {
+            return $result;
         }
 
-        $fieldNameConverter = new FieldNameConverter([
-            'numRows' => 'total',
-            'numPages' => 'pageTotal',
-            'rowType' => 'fields',
-            'statementHandle' => 'id',
-            'createdOn' => 'timestamp',
-        ]);
+        foreach (['resultSetMetaData', 'data', 'createdOn'] as $field) {
+            if (false === array_key_exists($field, $data)) {
+                throw new ResultException(sprintf('Object "%s" not found', $field));
+            }
+        }
 
-        $normalizer = new ObjectNormalizer(null, $fieldNameConverter);
+        foreach (['numRows', 'partitionInfo', 'rowType'] as $field) {
+            if (false === array_key_exists($field, $data['resultSetMetaData'])) {
+                throw new ResultException(sprintf('Object "%s" in "resultSetMetaData" not found', $field));
+            }
+        }
 
-        $serializer = new Serializer([$normalizer], [new JsonEncoder()]);
+        $result->setTotal($data['resultSetMetaData']['numRows']);
+        $result->setPage(1);
+        $result->setPageTotal(count($data['resultSetMetaData']['partitionInfo']));
+        $result->setFields($data['resultSetMetaData']['rowType']);
+        $result->setData($data['data']);
+        $result->setTimestamp($data['createdOn']);
 
-        return $serializer->denormalize($data, Result::class);
+        return $result;
+    }
+
+    /**
+     * @param array $data
+     *
+     * @return array
+     *
+     * @throws ResultException
+     */
+    private function translateData(array $data): array
+    {
+        if (false === array_key_exists('data', $data)) {
+            throw new ResultException('Object "data" not found');
+        }
+
+        return $data['data'];
     }
 
     /**
      * @return array
      *
      * @throws ParameterException
+     *
+     * @todo Remove "Accept-Encoding" when bugfix GZIP is fixed
      */
     private function getHeaders(): array
     {
         return [
             sprintf('Authorization: Bearer %s', $this->getClient()->getToken()),
-            'User-Agent: SnowflakeService',
+            'Accept-Encoding: gzip',
+            'User-Agent: SnowflakeService/0.5',
             'X-Snowflake-Authorization-Token-Type: KEYPAIR_JWT',
         ];
+    }
+
+    /**
+     * @param ResponseInterface $response
+     *
+     * @return array
+     *
+     * @throws JsonException
+     *
+     * @todo Remove this method when bugfix GZIP is fixed
+     */
+    private function toArray(ResponseInterface $response): array
+    {
+        if ('' === $content = $response->getContent(true)) {
+            throw new JsonException('Response body is empty.');
+        }
+
+        $headers = $response->getHeaders();
+
+        if ('gzip' === ($headers['content-encoding'][0] ?? null)) {
+            $content = $this->gzdecode($content);
+        }
+
+        try {
+            $content = json_decode($content, true, 512, JSON_BIGINT_AS_STRING | JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            throw new JsonException(sprintf('%s for "%s".', $exception->getMessage(), $response->getInfo('url')), $exception->getCode());
+        }
+
+        if (false === is_array($content)) {
+            throw new JsonException(sprintf('JSON content was expected to decode to an array, "%s" returned for "%s".', get_debug_type($content), $response->getInfo('url')));
+        }
+
+        return $content;
+    }
+
+    /**
+     * @param string $data
+     *
+     * @return string
+     */
+    private function gzdecode(string $data): string
+    {
+        $inflate = inflate_init(ZLIB_ENCODING_GZIP);
+
+        $content = '';
+        $offset = 0;
+
+        do {
+            $content .= inflate_add($inflate, substr($data, $offset));
+
+            if (ZLIB_STREAM_END === inflate_get_status($inflate)) {
+                $offset += inflate_get_read_len($inflate);
+            }
+        } while ($offset < strlen($data));
+
+        return $content;
     }
 }

@@ -8,9 +8,6 @@ use DateTime;
 use DateTimeInterface;
 use Exception;
 
-/**
- * Result
- */
 final class Result
 {
     /**
@@ -62,8 +59,6 @@ final class Result
     }
 
     /**
-     * Set id
-     *
      * @param string $id
      *
      * @return $this
@@ -84,8 +79,6 @@ final class Result
     }
 
     /**
-     * Set count
-     *
      * @param int $total
      *
      * @return $this
@@ -106,8 +99,6 @@ final class Result
     }
 
     /**
-     * Set page
-     *
      * @param int $page
      *
      * @return $this
@@ -128,8 +119,6 @@ final class Result
     }
 
     /**
-     * Set pageCount
-     *
      * @param int $pageTotal
      *
      * @return $this
@@ -142,8 +131,6 @@ final class Result
     }
 
     /**
-     * Get fields
-     *
      * @return array|null
      */
     public function getFields(): ?array
@@ -152,8 +139,6 @@ final class Result
     }
 
     /**
-     * Set fields
-     *
      * @param array $fields
      *
      * @return $this
@@ -167,8 +152,6 @@ final class Result
 
 
     /**
-     * Get data
-     *
      * @return array|null
      */
     public function getData(): ?array
@@ -186,8 +169,6 @@ final class Result
     }
 
     /**
-     * Get dataRaw
-     *
      * @return array|null
      */
     public function getDataRaw(): ?array
@@ -196,8 +177,6 @@ final class Result
     }
 
     /**
-     * Set data
-     *
      * @param array $data
      *
      * @return $this

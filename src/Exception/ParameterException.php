@@ -6,9 +6,6 @@ namespace WillemVerspyck\SnowflakeService\Exception;
 
 use Exception;
 
-/**
- * Class ParameterException
- */
-class ParameterException extends Exception
+final class ParameterException extends Exception
 {
 }

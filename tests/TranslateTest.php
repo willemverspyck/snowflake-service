@@ -5,36 +5,23 @@ declare(strict_types=1);
 namespace Tests;
 
 use DateTime;
-use DateTimeZone;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use WillemVerspyck\SnowflakeService\Client;
-use WillemVerspyck\SnowflakeService\Exception\ResultException;
 use WillemVerspyck\SnowflakeService\Exception\TranslateException;
 use WillemVerspyck\SnowflakeService\Translate;
-use WillemVerspyck\SnowflakeService\Exception\ParameterException;
 
-/**
- * Class TranslateTest
- */
-class TranslateTest extends TestCase
+final class TranslateTest extends TestCase
 {
     /**
      * @var Translate
      */
     private Translate $translate;
 
-    /**
-     *
-     */
     public function setUp(): void
     {
         $this->translate = new Translate();
     }
 
-    /**
-     * Test setFields
-     */
     public function testGetFields(): void
     {
         $fields = [
@@ -50,9 +37,6 @@ class TranslateTest extends TestCase
         self::assertEquals($fields, $this->translate->getFields());
     }
 
-    /**
-     * Test setFields
-     */
     public function testSetFields(): void
     {
         self::expectException(TranslateException::class);
@@ -64,15 +48,11 @@ class TranslateTest extends TestCase
         ]);
     }
 
-    /**
-     * Test getBoolean
-     */
     public function testGetBoolean(): void
     {
         $reflection = new ReflectionClass($this->translate);
 
         $method = $reflection->getMethod('getBoolean');
-        $method->setAccessible(true);
 
         self::assertFalse($method->invokeArgs($this->translate, ['0']));
         self::assertTrue($method->invokeArgs($this->translate, ['1']));
@@ -80,15 +60,11 @@ class TranslateTest extends TestCase
         self::assertNull($method->invokeArgs($this->translate, ['2']));
     }
 
-    /**
-     * Test getDate
-     */
     public function testGetDate(): void
     {
         $reflection = new ReflectionClass($this->translate);
 
         $method = $reflection->getMethod('getDate');
-        $method->setAccessible(true);
 
         self::assertEquals(new DateTime('1970-01-01'), $method->invokeArgs($this->translate, ['0']));
         self::assertEquals(new DateTime('1970-01-02'), $method->invokeArgs($this->translate, ['1']));
@@ -97,15 +73,11 @@ class TranslateTest extends TestCase
         self::assertNull($method->invokeArgs($this->translate, [null]));
     }
 
-    /**
-     * Test getFixed
-     */
     public function testGetFixed(): void
     {
         $reflection = new ReflectionClass($this->translate);
 
         $method = $reflection->getMethod('getFixed');
-        $method->setAccessible(true);
 
         self::assertEquals(12345, $method->invokeArgs($this->translate, ['12345', 0]));
         self::assertIsInt($method->invokeArgs($this->translate, ['12345', 0]));
@@ -122,15 +94,11 @@ class TranslateTest extends TestCase
         self::assertNull($method->invokeArgs($this->translate, [null, 0]));
     }
 
-    /**
-     * Test getTime
-     */
     public function testGetTime(): void
     {
         $reflection = new ReflectionClass($this->translate);
 
         $method = $reflection->getMethod('getTime');
-        $method->setAccessible(true);
 
         self::assertEquals(new DateTime('2021-03-19T17:06:59+00:00'), $method->invokeArgs($this->translate, ['1616173619.000000000']));
         self::assertEquals(new DateTime('2021-03-19T17:06:59.123456+00:00'), $method->invokeArgs($this->translate, ['1616173619.123456789']));
@@ -139,15 +107,11 @@ class TranslateTest extends TestCase
         self::assertNull($method->invokeArgs($this->translate, [null]));
     }
 
-    /**
-     * Test getTimeWithTimezone
-     */
     public function testGetTimeWithTimezone(): void
     {
         $reflection = new ReflectionClass($this->translate);
 
         $method = $reflection->getMethod('getTimeWithTimezone');
-        $method->setAccessible(true);
 
         self::assertEquals(new DateTime('2021-03-19T17:06:59+00:00'), $method->invokeArgs($this->translate, ['1616173619.000000000 0']));
         self::assertEquals(new DateTime('2021-03-19T17:36:59+00:30'), $method->invokeArgs($this->translate, ['1616173619.000000000 30']));

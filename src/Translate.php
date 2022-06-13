@@ -10,9 +10,6 @@ use DateTimeZone;
 use Exception;
 use WillemVerspyck\SnowflakeService\Exception\TranslateException;
 
-/**
- * Class Translate
- */
 class Translate
 {
     /**
@@ -22,11 +19,13 @@ class Translate
 
     /**
      * @return array
+     *
+     * @throws TranslateException
      */
     public function getFields(): array
     {
         if (count($this->fields) === 0) {
-            throw new ConvertException('Fields not set');
+            throw new TranslateException('Fields not set');
         }
         
         return $this->fields;
@@ -60,9 +59,7 @@ class Translate
     public function getData(array $data): array
     {
         $content = [];
-        
-        array_shift($data); // Remove Sequence ID
-        
+
         foreach ($this->getFields() as $index => $field) {
             $fieldName = $field['name'];
 
@@ -169,7 +166,7 @@ class Translate
             return null;
         }
 
-        if (1 === preg_match('/^([0-9]+\.[0-9]{6})[0-9]{3}/is', $value, $matches)) {
+        if (1 === preg_match('/^(\d+\.\d{6})\d{3}/is', $value, $matches)) {
             $timezone = new DateTimeZone('+0000');
 
             $date = new DateTime(sprintf('@%f', $matches[1]));
@@ -194,7 +191,7 @@ class Translate
             return null;
         }
 
-        if (1 === preg_match('/^([0-9]+\.[0-9]{6})[0-9]{3}\s([0-9]{1,4})/is', $value, $matches)) {
+        if (1 === preg_match('/^(\d+\.\d{6})\d{3}\s(\d{1,4})/is', $value, $matches)) {
             $timezone = new DateTimeZone(sprintf('+%02d:%02d', floor($matches[2] / 60), $matches[2] % 2));
 
             $date = new DateTime(sprintf('@%f', $matches[1]));

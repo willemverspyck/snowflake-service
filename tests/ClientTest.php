@@ -8,27 +8,18 @@ use PHPUnit\Framework\TestCase;
 use WillemVerspyck\SnowflakeService\Client;
 use WillemVerspyck\SnowflakeService\Exception\ParameterException;
 
-/**
- * Class ClientTest
- */
-class ClientTest extends TestCase
+final class ClientTest extends TestCase
 {
     /**
      * @var Client
      */
     private Client $client;
 
-    /**
-     *
-     */
     public function setUp(): void
     {
         $this->client = new Client();
     }
 
-    /**
-     * Test getUserException
-     */
     public function testGetUserException(): void
     {
         self::expectException(ParameterException::class);
@@ -36,9 +27,6 @@ class ClientTest extends TestCase
         $this->client->getUser();
     }
 
-    /**
-     * Test getUser
-     */
     public function testGetUser(): void
     {
         $this->client->setUser('USER');
@@ -46,9 +34,6 @@ class ClientTest extends TestCase
         self::assertEquals('USER', $this->client->getUser());
     }
 
-    /**
-     * Test getAccountException
-     */
     public function testGetAccountException(): void
     {
         self::expectException(ParameterException::class);
@@ -56,9 +41,6 @@ class ClientTest extends TestCase
         $this->client->getAccount();
     }
 
-    /**
-     * Test getAccount
-     */
     public function testGetAccount(): void
     {
         $this->client->setAccount('ACCOUNT');
@@ -66,9 +48,6 @@ class ClientTest extends TestCase
         self::assertEquals('ACCOUNT', $this->client->getAccount());
     }
 
-    /**
-     * Test getPublicKeyException
-     */
     public function testGetPublicKeyException(): void
     {
         self::expectException(ParameterException::class);
@@ -76,9 +55,6 @@ class ClientTest extends TestCase
         $this->client->getPublicKey();
     }
 
-    /**
-     * Test getPublicKey
-     */
     public function testGetPublicKey(): void
     {
         $this->client->setPublicKey('PUBLIC_KEY');
@@ -86,9 +62,6 @@ class ClientTest extends TestCase
         self::assertEquals('PUBLIC_KEY', $this->client->getPublicKey());
     }
 
-    /**
-     * Test getPrivateKeyException
-     */
     public function testGetPrivateKeyException(): void
     {
         self::expectException(ParameterException::class);
@@ -96,9 +69,6 @@ class ClientTest extends TestCase
         $this->client->getPrivateKey();
     }
 
-    /**
-     * Test getPrivateKey
-     */
     public function testGetPrivateKey(): void
     {
         $this->client->setPrivateKey('PRIVATE_KEY');

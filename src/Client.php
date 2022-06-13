@@ -13,9 +13,6 @@ use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use WillemVerspyck\SnowflakeService\Exception\ParameterException;
 
-/**
- * Class Client
- */
 class Client
 {
     /**
