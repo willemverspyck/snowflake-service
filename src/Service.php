@@ -14,7 +14,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 use WillemVerspyck\SnowflakeService\Exception\ParameterException;
 use WillemVerspyck\SnowflakeService\Exception\ResultException;
 
-class Service
+final class Service
 {
     private const CODE_SUCCESS = '090001';
     private const CODE_ASYNC = '333334';
@@ -167,26 +167,6 @@ class Service
     /**
      * @return bool
      */
-    public function isAsync(): bool
-    {
-        return $this->async;
-    }
-
-    /**
-     * @param bool $async
-     *
-     * @return $this
-     */
-    public function setAsync(bool $async): self
-    {
-        $this->async = $async;
-
-        return $this;
-    }
-
-    /**
-     * @return bool
-     */
     public function isNullable(): bool
     {
         return $this->nullable;
@@ -208,7 +188,7 @@ class Service
      * @param string $statement
      * @param array  $parameters
      *
-     * @return Result
+     * @return string
      *
      * @throws ClientExceptionInterface
      * @throws DecodingExceptionInterface
@@ -218,14 +198,14 @@ class Service
      * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface
      */
-    public function postStatement(string $statement, array $parameters = []): Result
+    public function postStatement(string $statement, array $parameters = []): string
     {
         $client = $this->getClient();
 
         $account = $client->getAccount();
         
         $variables = http_build_query([
-            'async' => $this->isAsync() ? 'true' : 'false',
+            'async' => 'true',
             'nullable' => $this->isNullable() ? 'true' : 'false',
         ]);
 
@@ -249,16 +229,16 @@ class Service
 
         $content = $this->toArray($response);
 
-        $this->hasResult($content);
+        $this->hasResult($content, [self::CODE_ASYNC]);
 
-        return $this->translateResult($content, $content['code'] === self::CODE_SUCCESS);
+        return $content['statementHandle'];
     }
 
     /**
      * @param string $id
      * @param int    $page
      *
-     * @return array|Result
+     * @return array
      *
      * @throws ClientExceptionInterface
      * @throws DecodingExceptionInterface
@@ -268,10 +248,10 @@ class Service
      * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface
      */
-    public function getStatement(string $id, int $page = 1): array|Result
+    public function getStatement(string $id, int $page): array
     {
         $client = $this->getClient();
-        
+
         $account = $client->getAccount();
 
         $variables = http_build_query([
@@ -287,13 +267,7 @@ class Service
         // Remove custom toArray when bug in PHP is fixed with support for multiple GZIP's (CRC-32 check and length)
         // $content = $response->toArray(true);
 
-        $content = $this->toArray($response);
-
-        if ($page > 1) {
-            return $this->translateData($content);
-        }
-
-        return $this->translateResult($content, true);
+        return $this->toArray($response);
     }
 
     /**
@@ -317,44 +291,28 @@ class Service
             'headers' => $this->getHeaders(),
         ]);
 
-        $this->hasResult($response->toArray(false));
+        $this->hasResult($response->toArray(false), [self::CODE_SUCCESS]);
     }
 
     /**
-     * @param array $data
-     *
-     * @throws ResultException
-     */
-    private function hasResult(array $data): void
-    {
-        foreach (['code', 'message'] as $field) {
-            if (false === array_key_exists($field, $data)) {
-                throw new ResultException('Unacceptable result', 406);
-            }
-        }
-
-        if (false === in_array($data['code'], [self::CODE_SUCCESS, self::CODE_ASYNC])) {
-            throw new ResultException(sprintf('%s (%s)', $data['message'], $data['code']), 422);
-        }
-
-        foreach (['statementHandle', 'statementStatusUrl'] as $field) {
-            if (false === array_key_exists($field, $data)) {
-                throw new ResultException('Unprocessable result', 422);
-            }
-        }
-    }
-
-    /**
-     * @param array $data
-     * @param bool  $executed
+     * @param string $id
      *
      * @return Result
-     *
+     * @throws ClientExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ParameterException
+     * @throws RedirectionExceptionInterface
      * @throws ResultException
+     * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface
      */
-    private function translateResult(array $data, bool $executed = false): Result
+    public function getResult(string $id): Result
     {
-        $result = new Result();
+        $data = $this->getStatement($id, 1);
+
+        $executed = $data['code'] === self::CODE_SUCCESS;
+
+        $result = new Result($this);
         $result->setId($data['statementHandle']);
         $result->setExecuted($executed);
 
@@ -386,18 +344,27 @@ class Service
 
     /**
      * @param array $data
-     *
-     * @return array
+     * @param array $codes
      *
      * @throws ResultException
      */
-    private function translateData(array $data): array
+    private function hasResult(array $data, array $codes): void
     {
-        if (false === array_key_exists('data', $data)) {
-            throw new ResultException('Object "data" not found');
+        foreach (['code', 'message'] as $field) {
+            if (false === array_key_exists($field, $data)) {
+                throw new ResultException('Unacceptable result', 406);
+            }
         }
 
-        return $data['data'];
+        if (false === in_array($data['code'], $codes)) {
+            throw new ResultException(sprintf('%s (%s)', $data['message'], $data['code']), 422);
+        }
+
+        foreach (['statementHandle', 'statementStatusUrl'] as $field) {
+            if (false === array_key_exists($field, $data)) {
+                throw new ResultException('Unprocessable result', 422);
+            }
+        }
     }
 
     /**

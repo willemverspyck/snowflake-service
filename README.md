@@ -65,8 +65,6 @@ $service->setRole('<role>');
 Optional configuration:
 
 ```php
-# Set too true to execute the statement asynchronously and return the statement handle. Default false
-$service->setAsync(false); 
 # Set too false to return a SQL NULL value as the string "null", rather than as the value null. Default: true
 $service->setNullable(false);
 ```
@@ -74,10 +72,18 @@ $service->setNullable(false);
 To execute the statement:
 
 ```php
-$result = $service->postStatement($statement);
+$statementId = $service->postStatement($statement);
 ```
 
-The statement is executed and the results are returned as ```Result``` object. If asynchronously is not specified or is set to false (and if the execution is completed in 45 seconds), then you will get a ```Result``` object with ```isExecuted()``` is set to true. Properties from the ```Result``` object:
+The statement will be executed and the ```$statementId``` is returned.
+
+To get the results of the statement:
+
+```php
+$result = $service->getResult($statementId);
+```
+
+```Result``` object will be returned with ```isExecuted()``` is set to false or true. If ```isExecuted()``` is false, the results are not ready yet. Try, for example, every 10 minutes, with a queue service, until the statement is executed and the ```isExecuted``` will be true. When ```isExecuted()``` is true the results are ready. If ```Result``` object is returned with ```isExecuted()``` set to false, all fields are NULL, except ```getId()```. Properties from the ```Result``` object:
 
 ```php
 # The "Query ID" from Snowflake.
@@ -107,22 +113,19 @@ $result->getTimestamp();
 $result->isExecuted();
 ```
 
-If asynchronously is set to true or the statement execution takes longer than 45 seconds to complete, then ```Result``` object is returned with ```isExecuted()``` set to false. All fields are NULL, except ```getId()```.
-
-You can check the status of the statement with:
+Because the results can be large, Snowflake will split the data into pages (partitions). With these methods you can paginate through the results:
 
 ```php
-$result = $service->getStatement($results->getId());
-```
-
-For example: Try every 10 minutes until the statement is executed and the ```isExecuted``` will be true.
-
-The ```$service->getStatement()``` will return an array when ```$page``` is higher than 1. If ```$page``` is 1, it will return the ```Result``` object:
-
-```php
-$page = 2;
-
-$result = $service->getStatement($results->getId(), $page);
+# Get next page
+$result->getPaginationNext();
+# Get previous page
+$result->getPaginationPrevious();
+# Get first page
+$result->getPaginationFirst();
+# Get last page
+$result->getPaginationLast();
+# Get specific page
+$result->getPagination(2);
 ```
 
 To cancel the statement:

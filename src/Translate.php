@@ -10,7 +10,7 @@ use DateTimeZone;
 use Exception;
 use WillemVerspyck\SnowflakeService\Exception\TranslateException;
 
-class Translate
+final class Translate
 {
     /**
      * @var array

@@ -7,9 +7,15 @@ namespace WillemVerspyck\SnowflakeService;
 use DateTime;
 use DateTimeInterface;
 use Exception;
+use WillemVerspyck\SnowflakeService\Exception\ResultException;
 
 final class Result
 {
+    /**
+     * @var Service
+     */
+    private Service $service;
+
     /**
      * @var string
      */
@@ -49,6 +55,14 @@ final class Result
      * @var bool
      */
     private bool $executed;
+
+    /**
+     * @param Service $service
+     */
+    public function __construct(Service $service)
+    {
+        $this->service = $service;
+    }
 
     /**
      * @return string
@@ -229,5 +243,64 @@ final class Result
         $this->executed = $executed;
 
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getPaginationFirst(): bool
+    {
+        return $this->getPagination(1);
+    }
+
+    /**
+     * @return bool
+     */
+    public function getPaginationPrevious(): bool
+    {
+        return $this->getPagination($this->getPage() - 1);
+    }
+
+    /**
+     * @return bool
+     */
+    public function getPaginationNext(): bool
+    {
+        return $this->getPagination($this->getPage() + 1);
+    }
+
+    /**
+     * @return bool
+     */
+    public function getPaginationLast(): bool
+    {
+        return $this->getPagination($this->getPageTotal());
+    }
+
+    /**
+     * @param int $page
+     *
+     * @return bool
+     */
+    public function getPagination(int $page): bool
+    {
+        if (false === $this->isExecuted()) {
+            return false;
+        }
+
+        if ($page < 0 || $page > $this->getPageTotal()) {
+            return false;
+        }
+
+        $data = $this->service->getStatement($this->getId(), $page);
+
+        if (false === array_key_exists('data', $data)) {
+            throw new ResultException('Object "data" not found');
+        }
+
+        $this->setData($data['data']);
+        $this->setPage($page);
+
+        return true;
     }
 }

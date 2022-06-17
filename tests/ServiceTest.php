@@ -20,7 +20,7 @@ final class ServiceTest extends TestCase
 
     public function setUp(): void
     {
-        $client = $this->createMock(Client::class);
+        $client = new Client();
 
         $this->service = new Service($client);
     }
@@ -61,15 +61,6 @@ final class ServiceTest extends TestCase
         self::assertEquals('ROLE', $this->service->getRole());
     }
 
-    public function testIsAsync(): void
-    {
-        self::assertFalse($this->service->isAsync());
-
-        $this->service->setAsync(true);
-
-        self::assertTrue($this->service->isAsync());
-    }
-
     public function testIsNullable(): void
     {
         self::assertTrue($this->service->isNullable());
@@ -89,7 +80,13 @@ final class ServiceTest extends TestCase
         $this->expectExceptionMessage('Unacceptable result');
         $this->expectExceptionCode(406);
 
-        $method->invokeArgs($this->service, [[]]);
+        $data = [];
+
+        $codes = [
+            '090001',
+        ];
+
+        $method->invokeArgs($this->service, [$data, $codes]);
     }
 
     public function testHasResultNotSuccessOrAsync(): void
@@ -102,10 +99,16 @@ final class ServiceTest extends TestCase
         $this->expectExceptionMessage('Exception Message (000000)');
         $this->expectExceptionCode(422);
 
-        $method->invokeArgs($this->service, [[
+        $data = [
             'code' => '000000',
             'message' => 'Exception Message',
-        ]]);
+        ];
+
+        $codes = [
+            '090001',
+        ];
+
+        $method->invokeArgs($this->service, [$data, $codes]);
     }
 
     public function testHasResultUnprocessable(): void
@@ -118,9 +121,15 @@ final class ServiceTest extends TestCase
         $this->expectExceptionMessage('Unprocessable result');
         $this->expectExceptionCode(422);
 
-        $method->invokeArgs($this->service, [[
+        $data = [
             'code' => '090001',
             'message' => 'Complete',
-        ]]);
+        ];
+
+        $codes = [
+            '090001',
+        ];
+
+        $method->invokeArgs($this->service, [$data, $codes]);
     }
 }

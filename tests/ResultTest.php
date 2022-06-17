@@ -7,7 +7,9 @@ namespace Tests;
 use DateTime;
 use DateTimeInterface;
 use PHPUnit\Framework\TestCase;
+use WillemVerspyck\SnowflakeService\Client;
 use WillemVerspyck\SnowflakeService\Result;
+use WillemVerspyck\SnowflakeService\Service;
 
 final class ResultTest extends TestCase
 {
@@ -18,7 +20,11 @@ final class ResultTest extends TestCase
 
     public function setUp(): void
     {
-        $this->result = new Result();
+        $client = new Client();
+
+        $service = new Service($client);
+
+        $this->result = new Result($service);
         $this->result->setId('ID');
         $this->result->setExecuted(false);
     }
